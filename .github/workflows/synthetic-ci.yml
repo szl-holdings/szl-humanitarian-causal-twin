@@ -1,0 +1,29 @@
+name: Synthetic causal twin - deterministic tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-synthetic:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Offline deterministic and refusal tests
+        run: python -B -m unittest discover -s tests -v
+      - name: Offline CLI smoke in ephemeral directory
+        shell: bash
+        run: |
+          out=$(mktemp -d)
+          python -B -m szl_causal_twin.cli examples/healthy-synthetic-water.json --out "$out/healthy.json"
+          python -B -m szl_causal_twin.cli examples/imbalance-synthetic-water.json --out "$out/imbalance.json"
+          python -B -m szl_causal_twin.cli examples/coverage-loss-synthetic-water.json --out "$out/coverage-loss.json"

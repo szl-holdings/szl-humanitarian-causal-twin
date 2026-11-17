@@ -1,0 +1,158 @@
+{
+  "schema_version": "szl.synthetic-causal-twin.v0.1",
+  "synthetic": true,
+  "source": {
+    "kind": "synthetic_fixture",
+    "revision": "SYN-PID-20261116-v1",
+    "rights": "CC0-synthetic",
+    "document_ref": "SYN-PID-SHEET-1"
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "R-1",
+        "kind": "reservoir",
+        "evidence_ref": "SYN-PID-SHEET-1"
+      },
+      {
+        "id": "TK-100",
+        "kind": "tank",
+        "evidence_ref": "SYN-PID-SHEET-1"
+      },
+      {
+        "id": "P-101",
+        "kind": "pump",
+        "evidence_ref": "SYN-PID-SHEET-1"
+      },
+      {
+        "id": "T-1",
+        "kind": "treatment",
+        "evidence_ref": "SYN-PID-SHEET-1"
+      },
+      {
+        "id": "D-1",
+        "kind": "community",
+        "evidence_ref": "SYN-PID-SHEET-1"
+      },
+      {
+        "id": "FT-100",
+        "kind": "flow_transmitter",
+        "evidence_ref": "SYN-PID-SHEET-1"
+      },
+      {
+        "id": "FIC-1",
+        "kind": "controller",
+        "evidence_ref": "SYN-PID-SHEET-1"
+      },
+      {
+        "id": "FV-1",
+        "kind": "valve",
+        "evidence_ref": "SYN-PID-SHEET-1"
+      },
+      {
+        "id": "PT-101",
+        "kind": "pressure_transmitter",
+        "observes_edge_id": "PUMP_TO_TREATMENT",
+        "evidence_ref": "SYN-PID-SHEET-1:sensor-PT-101"
+      }
+    ],
+    "edges": [
+      {
+        "id": "RESERVOIR_TO_TANK",
+        "from": "R-1",
+        "to": "TK-100",
+        "kind": "flow",
+        "evidence_ref": "SYN-PID-SHEET-1:line-A"
+      },
+      {
+        "id": "TANK_TO_PUMP",
+        "from": "TK-100",
+        "to": "P-101",
+        "kind": "flow",
+        "evidence_ref": "SYN-PID-SHEET-1:line-B"
+      },
+      {
+        "id": "PUMP_TO_TREATMENT",
+        "from": "P-101",
+        "to": "T-1",
+        "kind": "flow",
+        "evidence_ref": "SYN-PID-SHEET-1:line-C"
+      },
+      {
+        "id": "TO_COMMUNITY",
+        "from": "T-1",
+        "to": "D-1",
+        "kind": "flow",
+        "evidence_ref": "SYN-PID-SHEET-1:line-D"
+      },
+      {
+        "id": "FT_TO_FIC",
+        "from": "FT-100",
+        "to": "FIC-1",
+        "kind": "signal",
+        "evidence_ref": "SYN-PID-SHEET-1:signal-1"
+      },
+      {
+        "id": "FIC_TO_FV",
+        "from": "FIC-1",
+        "to": "FV-1",
+        "kind": "signal",
+        "evidence_ref": "SYN-PID-SHEET-1:signal-2"
+      }
+    ]
+  },
+  "observation": {
+    "observed_utc": "2026-11-16T22:00:00Z",
+    "interval_seconds": 60,
+    "flow_unit": "L/s",
+    "flows_lps": {
+      "RESERVOIR_TO_TANK": 4.0,
+      "TANK_TO_PUMP": 4.0
+    },
+    "tank_volume_liters_start": 10000,
+    "tank_volume_liters_end": 10000,
+    "pressure_sensor": {
+      "id": "PT-101",
+      "unit": "kPa",
+      "sample_interval_seconds": 1,
+      "samples": [
+        200.0,
+        202.828427,
+        204.0,
+        202.828427,
+        200.0,
+        197.171573,
+        196.0,
+        197.171573,
+        200.0,
+        202.828427,
+        204.0,
+        202.828427,
+        200.0,
+        197.171573,
+        196.0,
+        197.171573
+      ],
+      "evidence_ref": "SYN-PRESSURE-STREAM-v1",
+      "sampled_utc": "2026-11-16T22:00:00Z"
+    },
+    "flow_evidence_refs": {
+      "RESERVOIR_TO_TANK": "SYN-INLET-METER-v1",
+      "TANK_TO_PUMP": "SYN-OUTLET-METER-v1"
+    },
+    "storage_evidence_ref": "SYN-STORAGE-METER-v1",
+    "flow_sampled_utc": {
+      "RESERVOIR_TO_TANK": "2026-11-16T22:00:00Z",
+      "TANK_TO_PUMP": "2026-11-16T22:00:00Z"
+    },
+    "storage_sampled_utc": "2026-11-16T22:00:00Z"
+  },
+  "rules": {
+    "tank_id": "TK-100",
+    "path_start_id": "R-1",
+    "path_end_id": "D-1",
+    "max_abs_residual_lps": 0.25,
+    "max_relative_oscillation": 0.08,
+    "max_sensor_age_seconds": 120
+  }
+}

@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+# Do not commit independent local incident observations or live engineering data
+observations/
+private/
+*.secret
+*.key

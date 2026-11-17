@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>SZL Causal Twin — synthetic evidence console</title>
+<style>
+:root{font:16px/1.5 system-ui,Arial,sans-serif;background:#0b1520;color:#e6f1f4}
+body{margin:0 auto;max-width:1100px;padding:1.5rem}h1{line-height:1.1;margin:.4em 0}
+.header{display:flex;flex-wrap:wrap;align-items:center;gap:1rem;justify-content:space-between}
+.eyebrow,.tag{letter-spacing:.12em;color:#98d8da;font-size:.8rem;text-transform:uppercase}
+.warning{border:1px solid #f9bd74;background:#332611;color:#ffeacb;border-radius:10px;padding:1rem;margin:1.25rem 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:.8rem}
+.card{border:1px solid #325061;background:#142635;padding:1.2rem;border-radius:12px;min-height:145px}
+.label{color:#a3c5d0;font-size:.8rem;letter-spacing:.09em;text-transform:uppercase}
+.value{font-weight:700;font-size:1.18rem;overflow-wrap:anywhere}
+.small{font-size:.85rem;color:#b6ced6}
+select,button{background:#18394c;border:1px solid #7ab6c4;color:#fff;border-radius:7px;padding:.65rem .9rem;font:inherit}
+button{cursor:pointer;background:#14798e}button:focus-visible,select:focus-visible{outline:3px solid #a7f0cf}
+.controls{display:flex;gap:1rem;flex-wrap:wrap;align-items:center;margin:1rem 0 1.6rem}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#09131c;border:1px solid #2b4d60;padding:1rem;border-radius:8px}
+footer{margin-top:2rem;border-top:1px solid #355261;padding:1rem 0;color:#a9c5ce}
+</style>
+<script src="/ui.js" defer></script>
+</head>
+<body>
+<header class="header"><div><div class="eyebrow">SZL Holdings · research workbench</div>
+<h1>Humanitarian Causal Twin</h1><p>Evidence-led infrastructure screening with explicit abstention.</p></div>
+<span class="tag">LOCAL / SYNTHETIC ONLY</span></header>
+<div class="warning" role="alert"><strong>Not a physical safety system.</strong> All examples contain invented measurements. No real facility records, actuators, third-party agents, model weights or training are connected. Source checksums are not independent signatures.</div>
+<div class="controls"><label for="case">Demonstration case</label>
+<select id="case"><option value="healthy">Consistent synthetic readings</option>
+<option value="imbalance">Synthetic flow and pressure discrepancy</option>
+<option value="coverage-loss">Synthetic evidence gap</option></select>
+<button id="run" type="button">Evaluate synthetic scenario</button></div>
+<p id="status" role="status" aria-live="polite">Select a synthetic case and evaluate.</p>
+<section class="grid" aria-label="Evidence assessment">
+<div class="card"><div class="label">Decision</div><p class="value" id="decision">UNOBSERVED</p><div class="small">Automated actuation: <strong>DENIED</strong></div></div>
+<div class="card"><div class="label">Drawing topology</div><p class="value" id="topology">UNOBSERVED</p><p class="small" id="path"></p></div>
+<div class="card"><div class="label">Mass balance</div><p class="value" id="mass">UNOBSERVED</p><p class="small" id="residual"></p></div>
+<div class="card"><div class="label">Pressure spectrum</div><p class="value" id="spectrum">UNOBSERVED</p><p class="small" id="frequency"></p></div>
+</section>
+<h2>Evidence identity</h2><pre id="evidence">No evaluation yet.</pre>
+<h2>Qualifying limits</h2><p>Neither a passing sample nor a detected discrepancy proves physical safety, cause, field validation or model quality. Engineering review and calibrated independent measurements remain mandatory before real-world use.</p>
+<footer>Read-only browser → localhost API → deterministic core → unsigned integrity receipt. No external JavaScript, cloud calls, public ingress or control commands.</footer>
+</body></html>
