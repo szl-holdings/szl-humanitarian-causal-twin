@@ -12,6 +12,8 @@ SCHEMA_VERSION = "szl.synthetic-causal-twin.v0.1"
 LIMIT_NODES = 100
 LIMIT_EDGES = 250
 LIMIT_PRESSURE_SAMPLES = 64
+# Numerical roundoff sentinel only; NOT a calibrated pressure noise floor.
+NYQUIST_NUMERIC_EPSILON = 1e-9
 
 
 class InvalidEvidence(ValueError):
@@ -222,15 +224,51 @@ def _spectrum(observations: dict, rule: dict, nodes: dict, edges: list[dict]) ->
     if dt <= 0 or threshold <= 0:
         raise InvalidEvidence("spectral interval/threshold must be positive")
     n = len(samples)
-    spectrum = _fft(samples)
+    # Individually finite measurements can overflow the FFT or sample-rate
+    # arithmetic. Withhold evidence before any nonfinite JSON serialization.
+    try:
+        spectrum = _fft(samples)
+    except OverflowError:
+        return {"state":"UNAVAILABLE","reason":"spectral_derived_nonfinite"}
     mean = sum(samples)/n
+    if not math.isfinite(mean) or any(
+        not math.isfinite(x.real) or not math.isfinite(x.imag) for x in spectrum
+    ):
+        return {"state":"UNAVAILABLE","reason":"spectral_derived_nonfinite"}
+    nyquist = 0.5/dt
+    duration = n*dt
+    if (
+        not math.isfinite(nyquist) or not math.isfinite(duration)
+        or nyquist <= 0 or duration <= 0 or round(nyquist, 8) <= 0
+    ):
+        return {"state":"UNAVAILABLE","reason":"spectral_numeric_resolution_unavailable"}
     if abs(mean) < 1e-9:
         return {"state":"UNAVAILABLE","reason":"zero_mean_pressure"}
-    # No claim about signal frequencies above Nyquist or components hidden by aliasing.
-    bin_id = max(range(1,n//2+1), key=lambda i: abs(spectrum[i]))
+    # A complex component may be finite while its magnitude overflows.
+    magnitudes = [abs(spectrum[i]) for i in range(1,n//2+1)]
+    if any(not math.isfinite(a) for a in magnitudes):
+        return {"state":"UNAVAILABLE","reason":"spectral_derived_nonfinite"}
+    bin_id = max(range(1,n//2+1), key=lambda i: magnitudes[i-1])
     scale = 1 if bin_id == n//2 else 2
-    amplitude = scale*abs(spectrum[bin_id])/n
+    amplitude = scale*magnitudes[bin_id-1]/n
     relative = amplitude / abs(mean)
+    peak_frequency = bin_id/duration
+    if any(not math.isfinite(v) for v in (amplitude, relative, peak_frequency)):
+        return {"state":"UNAVAILABLE","reason":"spectral_derived_nonfinite"}
+    if round(peak_frequency, 8) <= 0:
+        return {"state":"UNAVAILABLE","reason":"spectral_numeric_resolution_unavailable"}
+    # Above-Nyquist signals can produce exactly the same alternating samples.
+    # A floating-point epsilon is NOT measured sensor noise or band-limiting.
+    if bin_id == n//2 and relative > NYQUIST_NUMERIC_EPSILON:
+        return {
+            "state":"UNAVAILABLE","reason":"nyquist_edge_unresolved",
+            "sensor_id":sensor_id,"observed_flow_edge_id":observed_edge,
+            "sensor_evidence_ref":sensor_node["evidence_ref"],
+            "measurement_evidence_ref":pressure["evidence_ref"],
+            "n_samples":n,"nyquist_hz":round(nyquist,8),
+            "relative_oscillation":round(relative,8),
+            "interpretation":"Nyquist-boundary peak cannot establish anti-aliasing or safe frequency attribution",
+        }
     return {
         "state":"FLAG" if relative > threshold else "PASS",
         "sensor_id":sensor_id,"observed_flow_edge_id":observed_edge,
@@ -238,8 +276,8 @@ def _spectrum(observations: dict, rule: dict, nodes: dict, edges: list[dict]) ->
         "measurement_evidence_ref":pressure["evidence_ref"],
         "sample_age_seconds":_sample_age(pressure["sampled_utc"],observations["observed_utc"],max_age),
         "n_samples":n,"sample_interval_seconds":dt,
-        "nyquist_hz":round(0.5/dt,8),
-        "peak_frequency_hz":round(bin_id/(n*dt),8),
+        "nyquist_hz":round(nyquist,8),
+        "peak_frequency_hz":round(peak_frequency,8),
         "peak_amplitude_kpa":round(amplitude,8),
         "mean_pressure_kpa":round(mean,8),
         "relative_oscillation":round(relative,8),

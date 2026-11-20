@@ -25,6 +25,15 @@ Prepared 2026-11-16 (research/prototype, not a model or infrastructure deploymen
 4. FFT is a fast transform, not a recovery of frequencies lost to sampling.
    The pilot performs a discrete, finite-window spectral screening with
    explicitly stated Nyquist and no claims about missing high-frequency detail.
+   **New source-only negative control:** a nontrivial alternating series whose
+   dominant frequency bin sits at Nyquist returns `UNAVAILABLE` with reason
+   `nyquist_edge_unresolved`, not a falsely reassuring `PASS`. Derived
+   floating-point overflow or insufficient eight-decimal frequency precision
+   also makes spectral evidence unavailable. The relative `1e-9` epsilon is
+   a deterministic computational sentinel, NOT physical sensor calibration.
+   SciPy's official Signal Processing tutorial explains the continuous-time
+   band-limiting requirement: https://docs.scipy.org/doc/scipy/tutorial/signal.html.
+   No anti-alias filter, physical causation or actuator control is claimed.
 5. MCP sits above existing API contracts as a tool discovery/invocation layer.
    `hatun-mcp` is SZL's existing canonical governed gateway. Do not add a new
    unauthenticated or bypassing MCP gateway to integrate these capabilities.

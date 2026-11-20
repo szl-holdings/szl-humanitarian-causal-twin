@@ -46,6 +46,60 @@ class PilotTests(unittest.TestCase):
         self.assertAlmostEqual(r["assessments"]["pressure_fft"]["peak_frequency_hz"],0.125)
         self.assertAlmostEqual(r["assessments"]["pressure_fft"]["peak_amplitude_kpa"],30)
 
+    def test_nyquist_alias_must_abstain_even_below_flag_threshold(self):
+        x=fixture()
+        x["observation"]["pressure_sensor"]["samples"]=[
+            200.0+5.0*((-1)**j) for j in range(16)
+        ]
+        report=evaluate(x)
+        peak=report["assessments"]["pressure_fft"]
+        self.assertEqual(peak["state"],"UNAVAILABLE")
+        self.assertEqual(peak["reason"],"nyquist_edge_unresolved")
+        self.assertEqual(peak["n_samples"],16)
+        self.assertEqual(peak["nyquist_hz"],0.5)
+        self.assertAlmostEqual(peak["relative_oscillation"],0.025)
+        self.assertEqual(report["decision"]["state"],"INSUFFICIENT_EVIDENCE")
+        self.assertEqual(report["decision"]["automated_actuation"],"DENIED")
+        self.assertTrue(verify_receipt(report))
+
+    def test_sub_nyquist_peak_keeps_existing_pass_and_flag(self):
+        x=fixture()
+        x["observation"]["pressure_sensor"]["samples"]=[
+            200.0+5.0*math.sin(2*math.pi*2*j/16) for j in range(16)
+        ]
+        stable=evaluate(x)
+        self.assertEqual(stable["assessments"]["pressure_fft"]["state"],"PASS")
+        self.assertEqual(stable["decision"]["state"],
+                         "NO_EXCEPTION_DETECTED_IN_SYNTHETIC_FIXTURE")
+        x["observation"]["pressure_sensor"]["samples"]=[
+            200.0+30.0*math.sin(2*math.pi*2*j/16) for j in range(16)
+        ]
+        flagged=evaluate(x)
+        self.assertEqual(flagged["assessments"]["pressure_fft"]["state"],"FLAG")
+        self.assertEqual(flagged["decision"]["state"],"HUMAN_REVIEW")
+
+    def test_extreme_finite_spectral_values_abstain_without_nonfinite_json(self):
+        for kind in ("huge_pressure","too_short_interval","too_long_interval"):
+            x=fixture()
+            pressure=x["observation"]["pressure_sensor"]
+            if kind=="huge_pressure":
+                pressure["samples"]=[1e308]*16
+                expected_reason="spectral_derived_nonfinite"
+            elif kind=="too_short_interval":
+                pressure["sample_interval_seconds"]=1e-320
+                expected_reason="spectral_numeric_resolution_unavailable"
+            else:
+                pressure["sample_interval_seconds"]=1e308
+                expected_reason="spectral_numeric_resolution_unavailable"
+            with self.subTest(kind=kind):
+                report=evaluate(x)
+                self.assertEqual(report["assessments"]["pressure_fft"]["state"],"UNAVAILABLE")
+                self.assertEqual(report["assessments"]["pressure_fft"]["reason"],expected_reason)
+                self.assertEqual(report["decision"]["state"],"INSUFFICIENT_EVIDENCE")
+                self.assertEqual(report["decision"]["automated_actuation"],"DENIED")
+                self.assertTrue(verify_receipt(report))
+                self.assertNotIn("Infinity",json.dumps(report,allow_nan=False))
+
     def test_fft_matches_direct_dft(self):
         x=[3*math.sin(2*math.pi*3*n/16)+10 for n in range(16)]
         fft=_fft(x)
